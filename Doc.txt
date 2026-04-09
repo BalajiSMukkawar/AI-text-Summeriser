@@ -1,0 +1,58 @@
+from flask import Flask, request, jsonify
+from transformers import pipeline
+
+app = Flask(__name__)
+
+# Load summarization model
+summarizer = pipeline("summarization")
+
+@app.route('/summarize', methods=['POST'])
+def summarize():
+    data = request.json
+    text = data['text']
+
+    summary = summarizer(text, max_length=100, min_length=30, do_sample=False)
+
+    return jsonify({
+        "summary": summary[0]['summary_text']
+    })
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+    <!DOCTYPE html>
+<html>
+<head>
+    <title>Text Summarizer</title>
+</head>
+<body>
+
+    <h1>AI Text Summarizer</h1>
+
+    <textarea id="inputText" rows="10" cols="50" placeholder="Enter text here..."></textarea>
+    <br><br>
+
+    <button onclick="summarizeText()">Summarize</button>
+
+    <h2>Summary:</h2>
+    <p id="output"></p>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
+async function summarizeText() {
+    const text = document.getElementById("inputText").value;
+
+    const response = await fetch("http://127.0.0.1:5000/summarize", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ text: text })
+    });
+
+    const data = await response.json();
+    document.getElementById("output").innerText = data.summary;
+}
